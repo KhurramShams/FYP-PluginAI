@@ -1,0 +1,20 @@
+{
+    "version": 2,
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "api/index.py"
+        }
+    ],
+    "functions": {
+        "api/index.py": {
+            "maxDuration": 60
+        }
+    },
+    "crons": [
+        {
+            "path": "/admin/email/usage",
+            "schedule": "0 8 1 * *"
+        }
+    ]
+}
