@@ -1,34 +1,32 @@
-# Dockerfile
+# Use lightweight Python image
 FROM python:3.12-slim
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install minimal system dependencies
 RUN apt-get update && apt-get install -y \
     gcc g++ curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first (layer caching)
+# Copy requirements first for caching
 COPY requirements.txt .
 
-# ✅ Step 1: Install CPU-only PyTorch FIRST (before other packages)
-# This prevents pip from pulling full CUDA torch later
-RUN pip install --no-cache-dir \
-    torch==2.2.2+cpu \
+# Upgrade pip
+RUN pip install --no-cache-dir --upgrade pip
+
+# Install CPU-only PyTorch
+RUN pip install --no-cache-dir torch==2.2.2+cpu \
     --index-url https://download.pytorch.org/whl/cpu
 
-# ✅ Step 2: Install remaining packages
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt \
+# Install remaining dependencies
+RUN pip install --no-cache-dir -r requirements.txt \
     --extra-index-url https://download.pytorch.org/whl/cpu
 
-# ✅ Step 3: Download NLTK data
-RUN python -m nltk.downloader punkt punkt_tab && \
-    python -c "import nltk; print('NLTK data:', nltk.data.path)"
+# Download only required NLTK package
+RUN python -m nltk.downloader punkt
 
-# Copy project files
+# Copy project
 COPY . .
 
-# Start command -
-CMD sh -c "uvicorn main:app --host 0.0.0.0 --port $PORT"
+# Railway requires app to bind to PORT
+CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"
