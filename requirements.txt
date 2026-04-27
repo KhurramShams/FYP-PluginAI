@@ -32,3 +32,4 @@ upstash-redis
 aiosmtplib
 apscheduler
 storage3
+nltk
