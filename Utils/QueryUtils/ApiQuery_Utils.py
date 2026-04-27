@@ -2,15 +2,12 @@ from typing import Optional,List
 from fastapi import HTTPException
 from Integrations.openai_client import client
 from Integrations.pinecone_client import index
-from sentence_transformers import CrossEncoder
 import os
 from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from Integrations.pinecone_client import supabase,pc
 import asyncio
 
-# cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
-cross_encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L-2-v2")
 
 load_dotenv(override=True)
 API_KEY = os.getenv("OPENAI_API_KEY")
@@ -42,28 +39,6 @@ async def build_context_block(chunks: List[dict]) -> str:
         parts.append(f"[Source {i}{source_info}]\n{text}")
 
     return "\n\n---\n\n".join(parts)
-
-async def rerank_chunks(query: str, chunks: List[dict], top_n: int = 2) -> List[dict]:
-    if not chunks:
-        return []
-
-    # Prepare pairs: (query, chunk_text)
-    pairs = [(query, chunk["text"]) for chunk in chunks]
-
-    # Get scores from CrossEncoder
-    loop = asyncio.get_event_loop()
-    scores = await loop.run_in_executor(
-        None, cross_encoder.predict, pairs
-    )
-
-    # Attach scores
-    for chunk, score in zip(chunks, scores):
-        chunk["rerank_score"] = float(score)
-
-    # Sort by rerank score (descending)
-    # ranked_chunks = sorted(chunks, key=lambda x: x["rerank_score"], reverse=True)
-
-    return sorted(chunks, key=lambda x: x["rerank_score"], reverse=True)[:top_n]
 
 # --- Retrieve Relevant Chunks ---
 async def retrieve_context(query: str, workspace_name: str, document_id: Optional[str] = None) -> List[dict]:
@@ -107,14 +82,13 @@ async def retrieve_context(query: str, workspace_name: str, document_id: Optiona
         reranked = await loop.run_in_executor(
             None,
             lambda: pc.inference.rerank(
-                model="bge-reranker-v2-m3",   # fast + accurate
+                model="bge-reranker-v2-m3",  
                 query=query,
                 documents=documents,
                 top_n=2,
                 return_documents=True
             )
         )
-
         # Step 4: Map back to your chunk format
         chunks = []
         for item in reranked.data:

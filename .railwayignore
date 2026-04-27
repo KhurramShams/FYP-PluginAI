@@ -6,6 +6,6 @@ __pycache__/
 .git/
 venv/
 .venv/
-node_modules/
 *.log
 .pytest_cache/
+node_modules/

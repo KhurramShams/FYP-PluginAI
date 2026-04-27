@@ -14,12 +14,13 @@ from Services.embedding_cache    import get_embedding_cache_stats
 from Services.conversation_cache import get_conversation_cache_stats
 from Services.rate_limiter import rate_limit, RATE_LIMIT_CONFIGS, is_redis_available
 from fastapi import Depends
+from Services.usage_email import send_usage_email_to_user,run_monthly_usage_emails
 
 from Services.usage_email import (
     run_monthly_usage_emails,
     send_usage_email_to_user
 )
-import logging, hashlib, secrets
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -1972,3 +1973,34 @@ async def export_transactions_csv(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# ---------------------
+
+@router.get("/admin/email/usage")
+async def trigger_usage_emails():
+    """
+    Trigger monthly usage emails.
+    Used by Vercel Cron or manual testing.
+    """
+    summary = await run_monthly_usage_emails()
+
+    return {
+        "status": "complete",
+        "summary": summary
+    }
+
+
+@router.post("/admin/email/usage")
+async def trigger_usage_email_to_user(email: str = Query(...)):
+    """
+    Send usage email to a single user.
+    """
+    result = await send_usage_email_to_user(email)
+
+    if result["status"] == "failed":
+        raise HTTPException(status_code=404, detail=result["reason"])
+
+    return {
+        "status": "success",
+        "message": f"Usage email sent to {email}"
+    }
