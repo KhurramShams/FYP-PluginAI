@@ -21,6 +21,8 @@ async def lifespan(app: FastAPI):
     print("Application shutting down")
     stop_scheduler()
 
+app = FastAPI(lifespan=lifespan)
+
 @app.on_event("startup")
 async def start_background_services():
     try:
@@ -28,8 +30,6 @@ async def start_background_services():
         print("Scheduler started")
     except Exception as e:
         print("Scheduler failed:", e)
-
-app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware, 
