@@ -1,15 +1,30 @@
-from fastapi import FastAPI, Request
-from api.Routers import User, ApiKeys, Auth, FileUpload, Subscriptions, Workspaces, ClientQuery, PortalQuery, Usage, Messages, Payments
-from fastapi.middleware.cors import CORSMiddleware
-from api import EmailServices
-from Services.scheduler import start_scheduler, stop_scheduler
-from contextlib import asynccontextmanager
-from api.Routers.AgentQuery import router as agent_router
-from api.Routers import UserDashboard
-from api.Admin import Dashboard
-from api.Admin import Admin
+import sys
 import os
-import uvicorn
+print("=== APP STARTING ===", flush=True)
+
+try:
+    print("importing fastapi...", flush=True)
+    from fastapi import FastAPI, Request
+    print("importing routers...", flush=True)
+    from api.Routers import User, ApiKeys, Auth, FileUpload, Subscriptions, Workspaces, ClientQuery, PortalQuery, Usage, Messages, Payments
+    print("importing email services...", flush=True)
+    from api import EmailServices
+    print("importing scheduler...", flush=True)
+    from Services.scheduler import start_scheduler, stop_scheduler
+    print("importing agent router...", flush=True)
+    from api.Routers.AgentQuery import router as agent_router
+    print("importing dashboard...", flush=True)
+    from api.Routers import UserDashboard
+    from api.Admin import Dashboard
+    from api.Admin import Admin
+    print("=== ALL IMPORTS OK ===", flush=True)
+except Exception as e:
+    print(f"=== IMPORT FAILED: {e} ===", flush=True)
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
+
+# ... rest of your main.py
 
 
 @asynccontextmanager
