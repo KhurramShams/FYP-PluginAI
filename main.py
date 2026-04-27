@@ -8,7 +8,8 @@ from api.Routers.AgentQuery import router as agent_router
 from api.Routers import UserDashboard
 from api.Admin import Dashboard
 from api.Admin import Admin
-
+import os
+import uvicorn
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -74,3 +75,8 @@ app.include_router(Admin.router)
 @app.get("/")
 async def health_check():
     return {"status": "PluginAI is running"}
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
