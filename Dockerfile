@@ -24,7 +24,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
     --extra-index-url https://download.pytorch.org/whl/cpu
 
 # ✅ Step 3: Download NLTK data
-RUN python -m nltk.downloader punkt punkt_tab
+RUN python -m nltk.downloader punkt punkt_tab && \
+    python -c "import nltk; print('NLTK data:', nltk.data.path)"
 
 # Copy project files
 COPY . .
