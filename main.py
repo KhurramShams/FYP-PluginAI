@@ -11,16 +11,23 @@ from api.Admin import Admin
 import os
 import uvicorn
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
     print("Application is starting up")
-    start_scheduler()
-    
-    yield  # app runs here
 
-    print("Application is shutting down")
+    yield  # app starts immediately
+
+    print("Application shutting down")
     stop_scheduler()
+
+@app.on_event("startup")
+async def start_background_services():
+    try:
+        start_scheduler()
+        print("Scheduler started")
+    except Exception as e:
+        print("Scheduler failed:", e)
 
 app = FastAPI(lifespan=lifespan)
 
